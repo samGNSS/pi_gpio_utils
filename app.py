@@ -1,0 +1,68 @@
+from flask import Flask, abort
+import time
+import gpiozero
+import json
+
+_DEFAULT_GPIO = "GPIO17"
+
+"""
+Init the GPIO pin to be an input with no pull up and active HIGH.
+No pull up is very import since we need the GPIO pin to be in a
+high impedance (high z) state to emulate a button
+
+NOTE: The active state doesn't really matter as we well never actually sample
+        the gpio pin. 
+
+"""
+def init_gpio_pin(pin: str = _DEFAULT_GPIO) -> gpiozero.InputDevice:
+    return gpiozero.InputDevice(pin, pull_up=None, active_state=True)
+
+
+"""
+Emulate a button press with GPIO
+"""
+def button_press(gpio: gpiozero.InputDevice) -> gpiozero.InputDevice:
+    # grab the pin we are using
+    pin = gpio.pin
+
+    # close our input device
+    gpio.close()
+
+    # make an output device
+    # We need to active low to close the circuit (i.e. connect the grounds)
+    # we also make sure that the pin starts in the active state
+    output_dev = gpiozero.OutputDevice(pin, active_high=False, initial_value=True)
+
+    # delay
+    time.sleep(0.5)
+
+    # swap back to input
+    output_dev.off()
+    output_dev.close()
+
+    # Return the gpio pin back in input
+    return init_gpio_pin(pin)
+
+
+###########
+# Web Stuffs
+###########
+app = Flask(__name__)
+
+_gpio = init_gpio_pin()
+
+@app.route("/hit_the_button", methods=['POST'])
+def hit_the_button():
+    try:
+        _gpio = button_press(_gpio)
+    except Exception as e:
+        abort(500, json.dumps({"exception":f"{e}"}))
+
+    return "Success"
+
+
+
+
+if __name__ == "__main__":
+    pass
+
