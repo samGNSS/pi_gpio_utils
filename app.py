@@ -22,7 +22,7 @@ def init_gpio_pin(pin: str = _DEFAULT_GPIO) -> gpiozero.InputDevice:
 """
 Emulate a button press with GPIO
 """
-def button_press(gpio: gpiozero.InputDevice) -> gpiozero.InputDevice:
+def button_press(gpio: gpiozero.InputDevice, press_time: float) -> gpiozero.InputDevice:
     # grab the pin we are using
     pin = gpio.pin
     print(pin)
@@ -36,7 +36,7 @@ def button_press(gpio: gpiozero.InputDevice) -> gpiozero.InputDevice:
     output_dev = gpiozero.OutputDevice(17, active_high=False, initial_value=True)
 
     # delay
-    time.sleep(0.5)
+    time.sleep(press_time)
 
     # swap back to input
     output_dev.off()
@@ -57,11 +57,24 @@ _gpio = init_gpio_pin(17)
 def hit_the_button():
     global _gpio
     try:
-        _gpio = button_press(_gpio)
+        _gpio = button_press(_gpio, 0.5)
     except Exception as e:
         import traceback
         traceback.format_exc(e)
         abort(500, json.dumps({"exception":f"{e}"}))
+
+    return "Success"
+
+
+@app.route("/program_the_button", methods=['POST'])
+def program_the_button():
+    global _gpio
+    try:
+        _gpio = button_press(_gpio, 3)
+    except Exception as e:
+        import traceback
+        traceback.format_exc(e)
+        abort(500, json.dumps({"exception" : f"{e}"}))
 
     return "Success"
 
