@@ -1,7 +1,7 @@
 [Unit]
 Description=Castle Black web service to open the gates
-After=network-online
-Requires=network-online
+After=network-online.target
+Requires=network-online.target
 
 [Service]
 Type=simple
