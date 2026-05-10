@@ -3,7 +3,7 @@ import time
 import gpiozero
 import json
 
-_DEFAULT_GPIO = "GPIO17"
+_DEFAULT_GPIO = 17
 
 """
 Init the GPIO pin to be an input with no pull up and active HIGH.
@@ -15,6 +15,7 @@ NOTE: The active state doesn't really matter as we well never actually sample
 
 """
 def init_gpio_pin(pin: str = _DEFAULT_GPIO) -> gpiozero.InputDevice:
+    print("init")
     return gpiozero.InputDevice(pin, pull_up=None, active_state=True)
 
 
@@ -24,6 +25,7 @@ Emulate a button press with GPIO
 def button_press(gpio: gpiozero.InputDevice) -> gpiozero.InputDevice:
     # grab the pin we are using
     pin = gpio.pin
+    print(pin)
 
     # close our input device
     gpio.close()
@@ -31,7 +33,7 @@ def button_press(gpio: gpiozero.InputDevice) -> gpiozero.InputDevice:
     # make an output device
     # We need to active low to close the circuit (i.e. connect the grounds)
     # we also make sure that the pin starts in the active state
-    output_dev = gpiozero.OutputDevice(pin, active_high=False, initial_value=True)
+    output_dev = gpiozero.OutputDevice(17, active_high=False, initial_value=True)
 
     # delay
     time.sleep(0.5)
@@ -41,7 +43,7 @@ def button_press(gpio: gpiozero.InputDevice) -> gpiozero.InputDevice:
     output_dev.close()
 
     # Return the gpio pin back in input
-    return init_gpio_pin(pin)
+    return init_gpio_pin(17)
 
 
 ###########
@@ -49,13 +51,16 @@ def button_press(gpio: gpiozero.InputDevice) -> gpiozero.InputDevice:
 ###########
 app = Flask(__name__)
 
-_gpio = init_gpio_pin()
+_gpio = init_gpio_pin(17)
 
 @app.route("/hit_the_button", methods=['POST'])
 def hit_the_button():
+    global _gpio
     try:
         _gpio = button_press(_gpio)
     except Exception as e:
+        import traceback
+        traceback.format_exc(e)
         abort(500, json.dumps({"exception":f"{e}"}))
 
     return "Success"
@@ -65,4 +70,3 @@ def hit_the_button():
 
 if __name__ == "__main__":
     pass
-
