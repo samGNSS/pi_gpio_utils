@@ -1,0 +1,13 @@
+[Unit]
+Description=Castle Black web service to open the gates
+After=network-online
+Requires=network-online
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/brittany/pi_gpio_utils
+ExecStart=/bin/bash -c "./server.sh"
+
+[Install]
+WantedBy=multi-user.target
